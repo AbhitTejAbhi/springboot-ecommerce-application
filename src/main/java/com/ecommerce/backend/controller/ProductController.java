@@ -98,7 +98,7 @@ public class ProductController {
     }
 
     // ----------------------------------------------------------------
-    // Customer APIs — /api/products/**  (requires authenticated())
+    // Customer APIs — /api/products/**   No Authentication Required
     // ----------------------------------------------------------------
 
     @GetMapping("/api/products")

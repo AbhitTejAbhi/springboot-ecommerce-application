@@ -5,6 +5,7 @@ import com.ecommerce.backend.dto.request.UpdateAddressRequest;
 import com.ecommerce.backend.dto.response.AddressResponse;
 import com.ecommerce.backend.entity.Address;
 import com.ecommerce.backend.entity.User;
+import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
 import com.ecommerce.backend.repository.AddressRepository;
 import com.ecommerce.backend.repository.UserRepository;
@@ -35,6 +36,9 @@ public class AddressServiceImpl implements AddressService {
     public AddressResponse createAddress(Long userId, CreateAddressRequest request) {
 
         User user = getUserOrThrow(userId);
+        // Validate that the customer is not saving an address that
+        // already exists in their address book.
+        validateDuplicateAddress(userId, request);
 
         // Only one address can be the default at a time. If the new
         // address is being created as the default, unset whatever
@@ -166,5 +170,33 @@ public class AddressServiceImpl implements AddressService {
                 .createdAt(address.getCreatedAt())
                 .updatedAt(address.getUpdatedAt())
                 .build();
+    }
+    /**
+     * Prevents a customer from saving duplicate physical addresses.
+     * Two addresses are considered duplicates when the same user
+     * already has an address with identical house number, street,
+     * city, state, country and pincode.
+     *
+     * Phone number and default flag are intentionally excluded from
+     * the duplicate check because they may legitimately differ for
+     * the same delivery location.
+     */
+    private void validateDuplicateAddress(Long userId,
+                                          CreateAddressRequest request) {
+
+        addressRepository
+                .findByUserIdAndHouseNumberAndStreetAndCityAndStateAndCountryAndPincode(
+                        userId,
+                        request.getHouseNumber(),
+                        request.getStreet(),
+                        request.getCity(),
+                        request.getState(),
+                        request.getCountry(),
+                        request.getPincode()
+                )
+                .ifPresent(existingAddress -> {
+                    throw new BadRequestException(
+                            "Address already exists for this user.");
+                });
     }
 }

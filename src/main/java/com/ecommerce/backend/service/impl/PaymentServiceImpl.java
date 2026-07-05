@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 /**
  * All payment business logic lives here. Payment is intentionally
  * kept internal for now — no Razorpay/Stripe integration — so this
@@ -67,6 +69,7 @@ public class PaymentServiceImpl implements PaymentService {
                 .amount(order.getTotalAmount())
                 .paymentMethod(request.getPaymentMethod())
                 .paymentStatus(PaymentStatus.PENDING)
+                .paymentDate(LocalDateTime.now())
                 .build();
 
         Payment savedPayment = paymentRepository.save(payment);
@@ -78,6 +81,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PaymentResponse getPayment(Long userId, Long paymentId) {
         Payment payment = paymentRepository.findByIdAndOrderUserId(paymentId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -87,6 +91,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PaymentResponse> getMyPayments(Long userId, Pageable pageable) {
         return paymentRepository.findByOrderUserId(userId, pageable)
                 .map(this::mapToResponse);
@@ -97,12 +102,14 @@ public class PaymentServiceImpl implements PaymentService {
     // ====================================================================
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PaymentResponse> getAllPayments(Pageable pageable) {
         return paymentRepository.findAll(pageable)
                 .map(this::mapToResponse);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PaymentResponse getPaymentById(Long paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new ResourceNotFoundException(

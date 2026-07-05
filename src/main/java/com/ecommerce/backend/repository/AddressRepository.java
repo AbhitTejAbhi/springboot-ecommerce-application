@@ -47,4 +47,23 @@ public interface AddressRepository extends JpaRepository<Address, Long> {
      * appears at the top.
      */
     List<Address> findByUserIdOrderByCreatedAtDesc(Long userId);
+    /**
+     * Finds an address with the exact same physical location already
+     * saved by the given user. Used during address creation to prevent
+     * duplicate addresses being added to a customer's address book.
+     *
+     * The duplicate check is based only on the delivery location
+     * (house number, street, city, state, country and pincode) and
+     * intentionally ignores fields like phone number and the default
+     * flag, since those may legitimately differ for the same address.
+     */
+    Optional<Address> findByUserIdAndHouseNumberAndStreetAndCityAndStateAndCountryAndPincode(
+            Long userId,
+            String houseNumber,
+            String street,
+            String city,
+            String state,
+            String country,
+            String pincode
+    );
 }
