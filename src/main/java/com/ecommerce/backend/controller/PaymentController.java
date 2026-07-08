@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -73,6 +74,7 @@ public class PaymentController {
     @GetMapping("/api/customer/payments")
     public ResponseEntity<ApiResponse<Page<PaymentResponse>>> getMyPayments(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
+            @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("Payments fetched successfully",
                 paymentService.getMyPayments(userDetails.getId(), pageable)));
@@ -108,6 +110,7 @@ public class PaymentController {
     })
     @GetMapping("/api/admin/payments")
     public ResponseEntity<ApiResponse<Page<PaymentResponse>>> getAllPayments(
+            @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("Payments fetched successfully",
                 paymentService.getAllPayments(pageable)));

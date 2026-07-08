@@ -1,6 +1,7 @@
 package com.ecommerce.backend.dto.request;
 
 import com.ecommerce.backend.enums.PaymentStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,13 +15,17 @@ import lombok.Setter;
  * validated server-side (PENDING -> SUCCESS / PENDING -> FAILED only;
  * SUCCESS and FAILED are both terminal).
  */
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+
+@Schema(name = "Update Payment Status Request",
+        description = "Admin-only payload for updating payment status. " +
+                "Only PENDING → SUCCESS or PENDING → FAILED transitions are allowed. Both are terminal.")
+@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 public class UpdatePaymentStatusRequest {
 
+    @Schema(description = "Target payment status",
+            example = "SUCCESS",
+            allowableValues = {"SUCCESS", "FAILED"},
+            requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "Payment status is required")
     private PaymentStatus paymentStatus;
 }

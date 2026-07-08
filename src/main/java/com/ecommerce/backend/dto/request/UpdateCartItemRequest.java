@@ -1,5 +1,6 @@
 package com.ecommerce.backend.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -14,13 +15,12 @@ import lombok.Setter;
  * identified by the path variable, and its product/cart association
  * is never reassignable through this endpoint.
  */
-@Getter
-@Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+
+@Schema(name = "Update Cart Item Request", description = "Payload for setting a cart item's quantity to a new absolute value")
+@Getter @Setter @Builder @NoArgsConstructor @AllArgsConstructor
 public class UpdateCartItemRequest {
 
+    @Schema(description = "New absolute quantity for this cart item (must be at least 1). Validated against available stock.", example = "3", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;

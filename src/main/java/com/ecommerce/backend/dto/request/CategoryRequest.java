@@ -1,5 +1,6 @@
 package com.ecommerce.backend.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -18,6 +19,8 @@ import lombok.Setter;
  *
  * No "id", "createdAt"/"updatedAt" — those are server-managed.
  */
+
+@Schema(name = "Category Request", description = "Payload for creating or updating a category")
 @Getter
 @Setter
 @Builder
@@ -25,9 +28,11 @@ import lombok.Setter;
 @AllArgsConstructor
 public class CategoryRequest {
 
+    @Schema(description = "Unique category name", example = "Electronics", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Category name is required")
     @Size(max = 100, message = "Category name must not exceed 100 characters")
     private String name;
 
+    @Schema(description = "Optional description of the category", example = "Gadgets and electronic devices", requiredMode = Schema.RequiredMode.NOT_REQUIRED)
     private String description;
 }

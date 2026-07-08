@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -103,6 +104,7 @@ public class CategoryController {
     })
     @GetMapping("/api/categories")
     public ResponseEntity<ApiResponse<Page<CategoryResponse>>> getAllCategories(
+            @ParameterObject
             @PageableDefault(size = 10, sort = "name") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("Categories fetched successfully",
                 categoryService.getAllCategories(pageable)));

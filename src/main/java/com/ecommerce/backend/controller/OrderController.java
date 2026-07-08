@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -82,6 +83,7 @@ public class OrderController {
     @GetMapping("/api/customer/orders")
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getMyOrders(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
+            @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("Orders fetched successfully",
                 orderService.getMyOrders(userDetails.getId(), pageable)));
@@ -136,6 +138,7 @@ public class OrderController {
     })
     @GetMapping("/api/admin/orders")
     public ResponseEntity<ApiResponse<Page<OrderResponse>>> getAllOrders(
+            @ParameterObject
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success("Orders fetched successfully",
                 orderService.getAllOrders(pageable)));
