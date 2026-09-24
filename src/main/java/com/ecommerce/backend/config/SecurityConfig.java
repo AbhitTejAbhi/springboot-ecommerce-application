@@ -2,6 +2,7 @@ package com.ecommerce.backend.config;
 
 import com.ecommerce.backend.security.CustomUserDetailsService;
 import com.ecommerce.backend.security.JwtAuthenticationFilter;
+import com.ecommerce.backend.security.RateLimitingFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,6 +45,7 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitingFilter rateLimitingFilter;
 
     /**
      * BCrypt is the standard, adaptive, salted hashing algorithm for
@@ -160,11 +162,13 @@ public class SecurityConfig {
 
                 .authenticationProvider(authenticationProvider())
 
-                // JwtAuthenticationFilter must run before
-                // UsernamePasswordAuthenticationFilter so the SecurityContext
-                // is already populated from the bearer token by the time
-                // Spring Security's standard filters (and our authorization
-                // rules above) evaluate the request.
+                // RateLimitingFilter runs at the API boundary before authentication
+                .addFilterBefore(
+                        rateLimitingFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
+
+                // JwtAuthenticationFilter runs before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class

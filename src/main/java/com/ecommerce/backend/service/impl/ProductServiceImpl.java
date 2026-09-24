@@ -7,7 +7,9 @@ import com.ecommerce.backend.entity.Category;
 import com.ecommerce.backend.entity.Product;
 import com.ecommerce.backend.exception.BadRequestException;
 import com.ecommerce.backend.exception.ResourceNotFoundException;
+import com.ecommerce.backend.repository.CartItemRepository;
 import com.ecommerce.backend.repository.CategoryRepository;
+import com.ecommerce.backend.repository.OrderItemRepository;
 import com.ecommerce.backend.repository.ProductRepository;
 import com.ecommerce.backend.service.CloudinaryService;
 import com.ecommerce.backend.service.ProductService;
@@ -30,6 +32,8 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final CartItemRepository cartItemRepository;
+    private final OrderItemRepository orderItemRepository;
     private final CloudinaryService cloudinaryService;
 
     @Override
@@ -97,23 +101,12 @@ public class ProductServiceImpl implements ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Product not found with id: " + productId));
 
-        // Hard delete for now, per current spec. Note: Product has no
-        // cascade configured on its cartItems/orderItems associations,
-        // so if this product is still referenced by an existing
-        // CartItem or OrderItem row, this delete will fail on the
-        // foreign key constraint (fk_cart_item_product /
-        // fk_order_item_product) rather than silently orphaning data.
-        // A soft delete (product.setActive(false)) avoids this entirely
-        // and is the recommended approach once historical order
-        // integrity matters — flagged here per the task's own note.
+        // Soft delete / Deactivate: toggle active flag
+        boolean newActiveState = !product.isActive();
+        product.setActive(newActiveState);
+        productRepository.save(product);
 
-
-         // Delete the associated Cloudinary image first (if any)
-        cloudinaryService.deleteImage(product.getImageUrl());
-        // Then delete the product from the database
-        productRepository.delete(product);
-
-        log.info("Deleted product: id={}, name={}", product.getId(), product.getName());
+        log.info("Toggled active status for product id={}: active={}", product.getId(), newActiveState);
     }
     @Transactional(readOnly = true)
     @Override

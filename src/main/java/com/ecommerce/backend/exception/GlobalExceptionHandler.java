@@ -74,6 +74,28 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * State conflicts (e.g. Idempotency key reuse with mismatched payload,
+     * or concurrent processing of the same idempotency key) -> 409 Conflict.
+     */
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflictException(
+            ConflictException ex,
+            HttpServletRequest request) {
+
+        log.warn("Conflict: {} | path={}", ex.getMessage(), request.getRequestURI());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error(HttpStatus.CONFLICT.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    /**
      * Bean validation failures on @Valid-annotated request DTOs
      * (@NotBlank, @Email, @Size, etc.) -> 400 Bad Request.
      *

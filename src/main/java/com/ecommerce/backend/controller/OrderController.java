@@ -3,8 +3,10 @@ package com.ecommerce.backend.controller;
 import com.ecommerce.backend.dto.request.PlaceOrderRequest;
 import com.ecommerce.backend.dto.response.OrderResponse;
 import com.ecommerce.backend.dto.response.ApiResponse;
+import com.ecommerce.backend.dto.response.IdempotencyResult;
 import com.ecommerce.backend.enums.OrderStatus;
 import com.ecommerce.backend.security.CustomUserDetails;
+import com.ecommerce.backend.service.IdempotencyService;
 import com.ecommerce.backend.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -36,6 +38,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderService orderService;
+    private final IdempotencyService idempotencyService;
 
     // ----------------------------------------------------------------
     // Customer APIs — /api/customer/orders/**  (requires hasRole("CUSTOMER"))
@@ -67,10 +70,21 @@ public class OrderController {
     @PostMapping("/api/customer/orders")
     public ResponseEntity<ApiResponse<OrderResponse>> placeOrder(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody PlaceOrderRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Order placed successfully",
-                        orderService.placeOrder(userDetails.getId(), request)));
+
+        IdempotencyResult<OrderResponse> result = idempotencyService.execute(
+                idempotencyKey,
+                userDetails.getId(),
+                "/api/customer/orders",
+                request,
+                OrderResponse.class,
+                () -> orderService.placeOrder(userDetails.getId(), request)
+        );
+
+        String message = result.isCached() ? "Order returned from idempotency cache" : "Order placed successfully";
+        return ResponseEntity.status(HttpStatus.valueOf(result.getHttpStatus()))
+                .body(ApiResponse.success(message, result.getBody()));
     }
 
     @Operation(summary = "View my order history (paginated)")

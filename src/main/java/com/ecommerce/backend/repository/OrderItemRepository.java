@@ -16,4 +16,9 @@ public interface OrderItemRepository extends JpaRepository<OrderItem,Long> {
      * count is naturally bounded by what a customer can add to a cart.
      */
     List<OrderItem> findByOrderId(Long orderId);
+
+    /**
+     * Check if any completed order contains this product.
+     */
+    boolean existsByProductId(Long productId);
 }

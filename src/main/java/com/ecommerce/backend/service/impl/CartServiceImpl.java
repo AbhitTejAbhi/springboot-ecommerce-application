@@ -214,15 +214,21 @@ public class CartServiceImpl implements CartService {
                 .map(this::mapToItemResponse)
                 .toList();
 
+        // Calculate grand total and active items count using only active products
         BigDecimal grandTotal = itemResponses.stream()
+                .filter(item -> Boolean.TRUE.equals(item.getProductActive()))
                 .map(CartItemResponse::getItemTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int activeItemsCount = (int) itemResponses.stream()
+                .filter(item -> Boolean.TRUE.equals(item.getProductActive()))
+                .count();
 
         return CartResponse.builder()
                 .cartId(cart.getId())
                 .items(itemResponses)
                 .grandTotal(grandTotal)
-                .totalItems(itemResponses.size())
+                .totalItems(activeItemsCount)
                 .build();
     }
 
@@ -239,6 +245,8 @@ public class CartServiceImpl implements CartService {
                 .productPrice(product.getPrice())
                 .quantity(cartItem.getQuantity())
                 .itemTotal(itemTotal)
+                .productActive(product.isActive())
+                .productStock(product.getStock())
                 .build();
     }
 }

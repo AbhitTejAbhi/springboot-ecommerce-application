@@ -2,9 +2,11 @@ package com.ecommerce.backend.controller;
 
 import com.ecommerce.backend.dto.request.CreatePaymentRequest;
 import com.ecommerce.backend.dto.request.UpdatePaymentStatusRequest;
+import com.ecommerce.backend.dto.response.IdempotencyResult;
 import com.ecommerce.backend.dto.response.PaymentResponse;
 import com.ecommerce.backend.dto.response.ApiResponse;
 import com.ecommerce.backend.security.CustomUserDetails;
+import com.ecommerce.backend.service.IdempotencyService;
 import com.ecommerce.backend.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -39,6 +41,7 @@ import org.springframework.web.bind.annotation.*;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final IdempotencyService idempotencyService;
 
     // ----------------------------------------------------------------
     // Customer APIs — /api/customer/payments/**  (requires hasRole("CUSTOMER"))
@@ -58,10 +61,21 @@ public class PaymentController {
     @PostMapping("/api/customer/payments")
     public ResponseEntity<ApiResponse<PaymentResponse>> createPayment(
             @Parameter(hidden = true) @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
             @Valid @RequestBody CreatePaymentRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Payment created successfully",
-                        paymentService.createPayment(userDetails.getId(), request)));
+
+        IdempotencyResult<PaymentResponse> result = idempotencyService.execute(
+                idempotencyKey,
+                userDetails.getId(),
+                "/api/customer/payments",
+                request,
+                PaymentResponse.class,
+                () -> paymentService.createPayment(userDetails.getId(), request)
+        );
+
+        String message = result.isCached() ? "Payment returned from idempotency cache" : "Payment created successfully";
+        return ResponseEntity.status(HttpStatus.valueOf(result.getHttpStatus()))
+                .body(ApiResponse.success(message, result.getBody()));
     }
 
     @Operation(summary = "view my payment history (paginated)")

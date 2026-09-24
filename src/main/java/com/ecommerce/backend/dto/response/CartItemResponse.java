@@ -40,4 +40,10 @@ public class CartItemResponse {
 
     @Schema(description = "productPrice × quantity (computed server-side)", example = "399998.00")
     private BigDecimal itemTotal;
+
+    @Schema(description = "Whether the product is active/available", example = "true")
+    private Boolean productActive;
+
+    @Schema(description = "Live available stock count for the product", example = "10")
+    private Integer productStock;
 }

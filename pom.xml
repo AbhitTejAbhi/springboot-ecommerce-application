@@ -105,6 +105,13 @@
 			<version>2.8.9</version>
 		</dependency>
 
+		<!-- Bucket4j Rate Limiting -->
+		<dependency>
+			<groupId>com.bucket4j</groupId>
+			<artifactId>bucket4j-core</artifactId>
+			<version>8.10.1</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<plugins>
